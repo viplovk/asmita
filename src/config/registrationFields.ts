@@ -18,6 +18,22 @@ export const REGISTRATION_STEPS = [
   { step: 3, title: 'Cultural Expression', description: 'Attire theme & participation notes' },
 ];
 
+export const FIRST_YEAR_SECTION_OPTIONS = [
+  { value: 'Section A', label: 'Section A' },
+  { value: 'Section B', label: 'Section B' },
+];
+
+export const HIGHER_YEAR_SECTION_OPTIONS = [
+  { value: 'Section A', label: 'Section A' },
+  { value: 'Section B', label: 'Section B' },
+  { value: 'Section C', label: 'Section C' },
+  { value: 'Section D', label: 'Section D' },
+];
+
+export function getSectionOptions(year: string) {
+  return year === '1st Year' ? FIRST_YEAR_SECTION_OPTIONS : HIGHER_YEAR_SECTION_OPTIONS;
+}
+
 export const REGISTRATION_FIELDS: FormFieldConfig[] = [
   // Step 1: Personal Coordinates
   {
@@ -39,17 +55,19 @@ export const REGISTRATION_FIELDS: FormFieldConfig[] = [
     step: 1,
     required: true,
     validationRegex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    errorMessage: 'Please enter a valid email address',
+    helperText: 'Your pass confirmation & schedule will be sent to this email',
+    errorMessage: 'Please enter a valid email address (e.g. student@iec.edu.in)',
   },
   {
     id: 'phone',
     name: 'phone',
-    label: 'Phone Number',
+    label: 'WhatsApp / Contact Phone',
     placeholder: 'e.g. +91 98765 43210',
     type: 'tel',
     step: 1,
     required: true,
     validationRegex: /^(\+?91[\-\s]?)?[6789]\d{9}$/,
+    helperText: 'For urgent cultural squad and helpline updates',
     errorMessage: 'Please provide a valid 10-digit mobile number',
   },
 
@@ -88,13 +106,13 @@ export const REGISTRATION_FIELDS: FormFieldConfig[] = [
   {
     id: 'year',
     name: 'year',
-    label: 'Year of Study',
+    label: 'Academic Year',
     placeholder: 'Select Year',
     type: 'select',
     step: 2,
     required: true,
     options: [
-      { value: '1st Year', label: '1st Year (Freshman)' },
+      { value: '1st Year', label: '1st Year (Freshman - Roll No. Not Required)' },
       { value: '2nd Year', label: '2nd Year (Sophomore)' },
       { value: '3rd Year', label: '3rd Year (Junior)' },
       { value: '4th Year', label: '4th Year (Senior)' },
@@ -102,14 +120,27 @@ export const REGISTRATION_FIELDS: FormFieldConfig[] = [
     ],
   },
   {
-    id: 'studentId',
-    name: 'studentId',
-    label: 'Enrollment / Student ID',
-    placeholder: 'e.g. 2300970100012 or IEC Roll No.',
-    type: 'text',
+    id: 'section',
+    name: 'section',
+    label: 'Class Section',
+    placeholder: 'Select your section',
+    type: 'select',
     step: 2,
     required: true,
-    errorMessage: 'Student/Roll ID is required for entry verification',
+    options: FIRST_YEAR_SECTION_OPTIONS,
+    helperText: '1st Year has Section A & B; 2nd Year onwards has Sections A, B, C & D',
+    errorMessage: 'Please select your class section',
+  },
+  {
+    id: 'studentId',
+    name: 'studentId',
+    label: 'University Roll Number / Student ID',
+    placeholder: 'e.g. 2300970100012 or AKTU/College Roll No.',
+    type: 'text',
+    step: 2,
+    required: false, // Conditionally validated for non-1st year students
+    helperText: 'Waived for 1st Year students (not yet allocated). Required for 2nd, 3rd, 4th Year.',
+    errorMessage: 'University Roll Number is required for 2nd, 3rd, and 4th year students',
   },
 
   // Step 3: Cultural Expression

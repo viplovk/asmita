@@ -5,23 +5,23 @@ import { EVENT_DETAILS, COORDINATORS } from '../config/eventData';
 
 /**
  * Generates and downloads a high-fidelity PDF ticket for the registered participant.
- * Implements a primary high-resolution DOM snapshot and a robust vector fallback.
+ * Follows the 'Earthy Terracotta & Ochre' aesthetic reminiscent of a physical invitation card.
  */
 export async function generateTicketPDF(
   record: RegistrationRecord,
   element?: HTMLElement | null
 ): Promise<boolean> {
   const sanitizedName = record.fullName.replace(/[^a-zA-Z0-9]/g, '_') || 'Participant';
-  const fileName = `ASMITA_2026_Pass_${record.registrationId}_${sanitizedName}.pdf`;
+  const fileName = `ASMITA_2026_Invitation_Pass_${record.registrationId}_${sanitizedName}.pdf`;
 
-  // Method 1: If DOM element is available, attempt high-res canvas capture into PDF
+  // Method 1: High-resolution DOM capture of the styled card
   if (element) {
     try {
       const canvas = await html2canvas(element, {
-        scale: 3, // High DPI for crisp print quality
+        scale: 3, // Crisp 300+ DPI equivalent
         useCORS: true,
         logging: false,
-        backgroundColor: '#E8D7B8',
+        backgroundColor: '#FAF6EE', // Earthy Warm Parchment
         windowWidth: element.scrollWidth,
       });
 
@@ -29,7 +29,7 @@ export async function generateTicketPDF(
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
 
-      // Create PDF formatted to fit the ticket aspect ratio
+      // Create PDF formatted to standard A5
       const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
       const pdf = new jsPDF({
         orientation,
@@ -40,8 +40,8 @@ export async function generateTicketPDF(
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
-      // Calculate centered aspect ratio with margin
-      const margin = 10;
+      // Card Margins & Aspect Ratio
+      const margin = 8;
       const maxWidth = pageWidth - margin * 2;
       const maxHeight = pageHeight - margin * 2;
 
@@ -56,19 +56,24 @@ export async function generateTicketPDF(
       const x = (pageWidth - renderWidth) / 2;
       const y = (pageHeight - renderHeight) / 2;
 
-      // Background decorative tint
-      pdf.setFillColor(36, 23, 17); // #241711
+      // Warm handloom paper envelope background tint (economical for printing)
+      pdf.setFillColor(245, 238, 226); // #F5EEE2
       pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+      // Subtle outer brass border around the envelope page
+      pdf.setDrawColor(192, 138, 50); // Golden Ochre #C08A32
+      pdf.setLineWidth(0.4);
+      pdf.rect(3, 3, pageWidth - 6, pageHeight - 6);
 
       pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight, undefined, 'FAST');
       pdf.save(fileName);
       return true;
     } catch (captureErr) {
-      console.warn('DOM capture PDF failed, switching to vector generation fallback:', captureErr);
+      console.warn('DOM capture PDF failed, falling back to pure vector layout:', captureErr);
     }
   }
 
-  // Method 2: Direct Vector PDF Generation (100% reliable, zero external dependencies)
+  // Method 2: Direct Vector PDF Generation (100% reliable fallback)
   try {
     generateVectorPDF(record, fileName);
     return true;
@@ -79,7 +84,8 @@ export async function generateTicketPDF(
 }
 
 /**
- * Pure vector fallback ticket layout
+ * Pure vector fallback ticket layout formatted as an authentic
+ * Earthy Terracotta & Golden Ochre Indian Invitation Patrika.
  */
 function generateVectorPDF(record: RegistrationRecord, fileName: string) {
   const pdf = new jsPDF({
@@ -91,168 +97,232 @@ function generateVectorPDF(record: RegistrationRecord, fileName: string) {
   const pageWidth = 148;
   const pageHeight = 210;
 
-  // 1. Canvas Outer Background (Aged Parchment / Warm Ivory)
-  pdf.setFillColor(243, 235, 221); // #F3EBDD
+  // 1. Hand-Pressed Warm Parchment Canvas Background
+  pdf.setFillColor(250, 246, 238); // #FAF6EE
   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
 
-  // 2. Double Ornate Border
-  pdf.setDrawColor(176, 138, 69); // Brass #B08A45
-  pdf.setLineWidth(1.2);
-  pdf.rect(7, 7, pageWidth - 14, pageHeight - 14);
-
+  // 2. Double Ornamental Border: Outer Terracotta, Inner Golden Ochre
   pdf.setDrawColor(142, 63, 44); // Terracotta #8E3F2C
+  pdf.setLineWidth(1.4);
+  pdf.rect(6, 6, pageWidth - 12, pageHeight - 12);
+
+  pdf.setDrawColor(192, 138, 50); // Golden Ochre #C08A32
+  pdf.setLineWidth(0.5);
+  pdf.rect(8, 8, pageWidth - 16, pageHeight - 16);
+
+  // Corner accents
+  pdf.setFillColor(192, 138, 50);
+  pdf.circle(9.5, 9.5, 1, 'F');
+  pdf.circle(pageWidth - 9.5, 9.5, 1, 'F');
+  pdf.circle(9.5, pageHeight - 9.5, 1, 'F');
+  pdf.circle(pageWidth - 9.5, pageHeight - 9.5, 1, 'F');
+
+  // 3. Cultural Invocation & Masthead
+  pdf.setTextColor(142, 63, 44); // Terracotta
+  pdf.setFont('times', 'italic');
+  pdf.setFontSize(8.5);
+  pdf.text('|| Sanskriti • Parampara • Asmita • Gaurav ||', pageWidth / 2, 15, { align: 'center' });
+
+  pdf.setTextColor(168, 77, 52); // Earthy Clay
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(7.5);
+  pdf.text('IEC COLLEGE OF ENGINEERING & TECHNOLOGY, GREATER NOIDA', pageWidth / 2, 20.5, { align: 'center' });
+
+  // 4. Royal Event Title Cartouche (Terracotta Ribbon)
+  pdf.setFillColor(142, 63, 44); // #8E3F2C
+  pdf.roundedRect(12, 23.5, pageWidth - 24, 20, 2, 2, 'F');
+  pdf.setDrawColor(192, 138, 50);
   pdf.setLineWidth(0.4);
-  pdf.rect(9, 9, pageWidth - 18, pageHeight - 18);
+  pdf.roundedRect(12, 23.5, pageWidth - 24, 20, 2, 2, 'D');
 
-  // 3. Header Banner (Terracotta #8E3F2C)
-  pdf.setFillColor(142, 63, 44);
-  pdf.rect(9, 9, pageWidth - 18, 28, 'F');
+  pdf.setTextColor(250, 246, 238);
+  pdf.setFont('times', 'bold');
+  pdf.setFontSize(21);
+  pdf.text('ASMITA', pageWidth / 2, 33, { align: 'center' });
 
-  // Institution & Event
-  pdf.setTextColor(243, 235, 221);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(8.5);
-  pdf.text('IEC COLLEGE OF ENGINEERING & TECHNOLOGY, GREATER NOIDA', pageWidth / 2, 16, { align: 'center' });
+  pdf.setTextColor(244, 235, 212); // Warm Gold
+  pdf.text('ETHNIC DAY 2026 • OFFICIAL CEREMONIAL PASS', pageWidth / 2, 39, { align: 'center' });
 
-  pdf.setFont('times', 'bold');
-  pdf.setFontSize(18);
-  pdf.text('ASMITA — ETHNIC DAY 2026', pageWidth / 2, 25, { align: 'center' });
-
-  pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(7.5);
-  pdf.setTextColor(232, 215, 184);
-  pdf.text('A CELEBRATION OF CULTURE, TRADITION & IDENTITY', pageWidth / 2, 32, { align: 'center' });
-
-  // 4. Pass Status Badge & Registration ID
-  pdf.setFillColor(232, 215, 184); // #E8D7B8
-  pdf.roundedRect(14, 42, pageWidth - 28, 14, 2, 2, 'F');
-  pdf.setDrawColor(176, 138, 69);
+  // 5. Delegate Pass Number Stub Bar
+  pdf.setFillColor(239, 227, 202); // #EFE3CA
+  pdf.roundedRect(12, 46.5, pageWidth - 24, 11, 1.5, 1.5, 'F');
+  pdf.setDrawColor(192, 138, 50);
   pdf.setLineWidth(0.3);
-  pdf.roundedRect(14, 42, pageWidth - 28, 14, 2, 2, 'D');
+  pdf.roundedRect(12, 46.5, pageWidth - 24, 11, 1.5, 1.5, 'D');
 
   pdf.setTextColor(142, 63, 44);
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(9);
-  pdf.text('OFFICIAL ENTRY PASS', 20, 50.5);
+  pdf.setFontSize(8);
+  pdf.text('STATUS: CONFIRMED DELEGATE', 18, 53.5);
 
   pdf.setFillColor(142, 63, 44);
-  pdf.roundedRect(pageWidth - 62, 45, 43, 8, 1.5, 1.5, 'F');
-  pdf.setTextColor(243, 235, 221);
+  pdf.roundedRect(pageWidth - 58, 48.5, 42, 7, 1, 1, 'F');
+  pdf.setTextColor(250, 246, 238);
   pdf.setFont('courier', 'bold');
-  pdf.setFontSize(9.5);
-  pdf.text(record.registrationId, pageWidth - 40.5, 50.5, { align: 'center' });
+  pdf.setFontSize(9);
+  pdf.text(record.registrationId, pageWidth - 37, 53.5, { align: 'center' });
 
-  // 5. Participant Profile Card
-  const boxX = 14;
-  const boxY = 61;
-  const boxW = pageWidth - 28;
-  const boxH = 68;
+  // 6. Delegate Profile Sanctuary Card
+  const cardX = 12;
+  const cardY = 60.5;
+  const cardW = pageWidth - 24;
+  const cardH = 68;
 
   pdf.setFillColor(255, 255, 255);
-  pdf.setDrawColor(216, 193, 154);
-  pdf.setLineWidth(0.4);
-  pdf.roundedRect(boxX, boxY, boxW, boxH, 2, 2, 'FD');
+  pdf.setDrawColor(192, 138, 50);
+  pdf.setLineWidth(0.3);
+  pdf.roundedRect(cardX, cardY, cardW, cardH, 2, 2, 'FD');
 
-  const fields = [
-    { label: 'ATTENDEE NAME', val: record.fullName, bold: true },
-    { label: 'COLLEGE', val: record.college || 'IEC College of Engineering & Technology' },
-    { label: 'DEPARTMENT / BRANCH', val: record.branch || 'Not Specified' },
-    { label: 'ACADEMIC YEAR', val: record.year || 'Student' },
-    { label: 'STUDENT / ROLL ID', val: record.studentId || 'N/A' },
-    { label: 'ATTIRE CATEGORY', val: record.attireCategory || 'Traditional Ethnic' },
+  // Decorative inner line
+  pdf.setDrawColor(240, 228, 208);
+  pdf.rect(cardX + 2, cardY + 2, cardW - 4, cardH - 4);
+
+  const rollOrStatus =
+    record.year === '1st Year'
+      ? 'Roll No. Pending (1st Year)'
+      : record.studentId || 'Verified';
+
+  const profileRows = [
+    { label: 'INVITED ATTENDEE', val: record.fullName, bold: true, isName: true },
+    { label: 'BRANCH & SECTION', val: `${record.branch || 'Engineering'} • ${record.section || 'Section A'}` },
+    { label: 'YEAR & ROLL NUMBER', val: `${record.year || 'Student'} • ${rollOrStatus}` },
+    { label: 'REGISTERED EMAIL', val: record.email || 'N/A' },
+    { label: 'HERITAGE ATTIRE', val: record.attireCategory || 'Traditional Ethnic Ensemble', italic: true },
   ];
 
-  let currentY = boxY + 9;
-  fields.forEach((f, i) => {
+  let currentY = cardY + 8;
+  profileRows.forEach((row, idx) => {
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7.5);
-    pdf.setTextColor(142, 63, 44);
-    pdf.text(f.label + ':', boxX + 5, currentY);
+    pdf.setFontSize(7);
+    pdf.setTextColor(168, 77, 52); // Terracotta Clay
+    pdf.text(row.label + ':', cardX + 5, currentY);
 
-    pdf.setFont('helvetica', f.bold ? 'bold' : 'normal');
-    pdf.setFontSize(f.bold ? 9.5 : 8.5);
-    pdf.setTextColor(36, 23, 17);
-    pdf.text(String(f.val), boxX + 46, currentY);
-
-    if (i < fields.length - 1) {
-      pdf.setDrawColor(230, 220, 205);
-      pdf.setLineWidth(0.2);
-      pdf.line(boxX + 5, currentY + 2.5, boxX + boxW - 5, currentY + 2.5);
+    if (row.isName) {
+      pdf.setFont('times', 'bold');
+      pdf.setFontSize(11);
+      pdf.setTextColor(36, 23, 17);
+      pdf.text(String(row.val), cardX + 46, currentY + 0.5);
+    } else {
+      pdf.setFont('helvetica', row.italic ? 'italic' : row.bold ? 'bold' : 'normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(row.italic ? 109 : 45, row.italic ? 44 : 30, row.italic ? 29 : 24);
+      pdf.text(String(row.val), cardX + 46, currentY);
     }
-    currentY += 9.5;
+
+    if (idx < profileRows.length - 1) {
+      pdf.setDrawColor(238, 226, 210);
+      pdf.setLineWidth(0.2);
+      pdf.line(cardX + 5, currentY + 3.5, cardX + cardW - 5, currentY + 3.5);
+    }
+    currentY += 11.5;
   });
 
-  // 6. Event Details Box (Date, Venue, Reporting Time)
-  const detailBoxY = 134;
-  pdf.setFillColor(232, 215, 184);
-  pdf.roundedRect(14, detailBoxY, pageWidth - 28, 22, 2, 2, 'F');
-  pdf.setDrawColor(176, 138, 69);
+  // 7. Auspicious Schedule & Convocation Venue Cartouche
+  const schedY = 131.5;
+  pdf.setFillColor(244, 235, 212); // Warm Ochre Tint
+  pdf.roundedRect(cardX, schedY, cardW, 21, 2, 2, 'F');
+  pdf.setDrawColor(192, 138, 50);
   pdf.setLineWidth(0.3);
-  pdf.roundedRect(14, detailBoxY, pageWidth - 28, 22, 2, 2, 'D');
+  pdf.roundedRect(cardX, schedY, cardW, 21, 2, 2, 'D');
 
-  // Left: Date
+  // Left Column: Date & Time
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(8);
+  pdf.setFontSize(7.5);
   pdf.setTextColor(142, 63, 44);
-  pdf.text('DATE & TIME', 20, detailBoxY + 6.5);
+  pdf.text('DATE & TIME', cardX + 6, schedY + 6);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(9);
   pdf.setTextColor(36, 23, 17);
-  pdf.text('16 SEPTEMBER 2026', 20, detailBoxY + 12);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(7.5);
-  pdf.text('Wednesday • 10:00 AM onwards', 20, detailBoxY + 17);
-
-  // Right: Venue
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(8);
-  pdf.setTextColor(142, 63, 44);
-  pdf.text('VENUE', 82, detailBoxY + 6.5);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(9);
-  pdf.setTextColor(36, 23, 17);
-  pdf.text('SEMINAR HALL, F BLOCK', 82, detailBoxY + 12);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(7.5);
-  pdf.text('IEC College, Knowledge Park I', 82, detailBoxY + 17);
-
-  // 7. Security Verification Seal & Decorative Stamp
-  const footerY = 162;
-  pdf.setDrawColor(176, 138, 69);
-  pdf.setLineWidth(0.3);
-  pdf.line(14, footerY, pageWidth - 14, footerY);
-
-  // Verification Seal
-  pdf.setDrawColor(142, 63, 44);
-  pdf.setFillColor(248, 243, 235);
-  pdf.circle(28, footerY + 14, 10, 'FD');
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(6);
-  pdf.setTextColor(142, 63, 44);
-  pdf.text('ASMITA', 28, footerY + 13, { align: 'center' });
-  pdf.text('VERIFIED', 28, footerY + 16, { align: 'center' });
-
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(8);
-  pdf.setTextColor(142, 63, 44);
-  pdf.text('STATUS: CONFIRMED PARTICIPANT', 44, footerY + 10);
+  pdf.text('16 SEPTEMBER 2026', cardX + 6, schedY + 11.5);
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(7);
-  pdf.setTextColor(60, 45, 35);
-  pdf.text('Presented by Spearheads Student Council', 44, footerY + 14.5);
-  pdf.text('Please present this pass upon arrival at the F Block reception.', 44, footerY + 19);
+  pdf.setTextColor(89, 57, 44);
+  pdf.text('Wednesday • 10:00 AM IST onwards', cardX + 6, schedY + 16);
 
-  // 8. Bottom Coordinator Helpline & Pass Validity
+  // Divider
+  pdf.setDrawColor(192, 138, 50);
+  pdf.setLineWidth(0.2);
+  pdf.line(cardX + 64, schedY + 3, cardX + 64, schedY + 18);
+
+  // Right Column: Venue
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(7.5);
+  pdf.setTextColor(142, 63, 44);
+  pdf.text('CONVOCATION VENUE', cardX + 70, schedY + 6);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(9);
+  pdf.setTextColor(36, 23, 17);
+  pdf.text('SEMINAR HALL, F BLOCK', cardX + 70, schedY + 11.5);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(7);
+  pdf.setTextColor(89, 57, 44);
+  pdf.text('IEC Main Campus, Knowledge Park I', cardX + 70, schedY + 16);
+
+  // 8. Perforated Tear Line
+  const perfY = 157;
+  pdf.setDrawColor(142, 63, 44);
+  pdf.setLineWidth(0.3);
+  // Cutout notch simulation on edges
+  pdf.setFillColor(250, 246, 238);
+  for (let i = cardX; i < cardX + cardW; i += 3) {
+    pdf.line(i, perfY, i + 1.5, perfY);
+  }
+
+  // 9. Verification Stub: Ceremonial Seal & Security Block
+  const stubY = 162;
+
+  // Wax Seal
+  pdf.setDrawColor(192, 138, 50);
+  pdf.setFillColor(142, 63, 44); // Terracotta Wax
+  pdf.circle(26, stubY + 12, 10, 'FD');
+  pdf.circle(26, stubY + 12, 8.5, 'D');
+
+  pdf.setTextColor(250, 246, 238);
+  pdf.setFont('times', 'bold');
+  pdf.setFontSize(5.5);
+  pdf.text('ASMITA', 26, stubY + 11, { align: 'center' });
+  pdf.setFontSize(4.5);
+  pdf.text('SEAL 2026', 26, stubY + 14, { align: 'center' });
+
+  // Seal Authority text
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(8);
+  pdf.setTextColor(142, 63, 44);
+  pdf.text('AUTHENTICATED CEREMONIAL PASS', 41, stubY + 7.5);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(6.8);
+  pdf.setTextColor(89, 57, 44);
+  pdf.text('Spearheads Student Council • IECian Cultural Society Network', 41, stubY + 12);
+  pdf.text('Strict Dress Code: Traditional / Cultural Ethnic Attire required', 41, stubY + 16);
+
+  // Security QR glyph box
+  pdf.setFillColor(255, 255, 255);
+  pdf.setDrawColor(192, 138, 50);
+  pdf.setLineWidth(0.3);
+  pdf.rect(pageWidth - 36, stubY + 2, 22, 22, 'FD');
+  pdf.setTextColor(142, 63, 44);
+  pdf.setFont('courier', 'bold');
+  pdf.setFontSize(6);
+  pdf.text('SCAN CIPHER', pageWidth - 25, stubY + 12, { align: 'center' });
+  pdf.text(record.registrationId.slice(-6), pageWidth - 25, stubY + 16, { align: 'center' });
+
+  // 10. Helpline & Footer Notes
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(6.5);
-  pdf.setTextColor(120, 100, 85);
+  pdf.setTextColor(115, 74, 56);
   pdf.text(
     `Coordinators: ${COORDINATORS[0].name} (${COORDINATORS[0].displayPhone}) | ${COORDINATORS[1].name} (${COORDINATORS[1].displayPhone})`,
     pageWidth / 2,
-    196,
+    195,
     { align: 'center' }
   );
-  pdf.text('Official Digital Pass • Valid for ASMITA 2026 Admissions', pageWidth / 2, 200, { align: 'center' });
+  pdf.setFont('times', 'italic');
+  pdf.setFontSize(6);
+  pdf.setTextColor(142, 63, 44);
+  pdf.text('Official Digital Entry Pass • IEC College of Engineering & Technology', pageWidth / 2, 199, { align: 'center' });
 
   pdf.save(fileName);
 }
+

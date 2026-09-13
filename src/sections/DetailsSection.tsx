@@ -4,7 +4,8 @@ import { SectionHeading } from '../components/decorative/SectionHeading';
 import { PhysicalCard } from '../components/decorative/PhysicalCard';
 import { CornerFlourish, CeremonialSeal, DiyaFlame } from '../components/decorative/DecorativeIcons';
 import { BrassDivider } from '../components/decorative/BrassDivider';
-import { Calendar, MapPin, Clock, Copy, Check, Navigation } from 'lucide-react';
+import { Calendar, CalendarPlus, MapPin, Clock, Copy, Check, Navigation } from 'lucide-react';
+import { getGoogleCalendarUrl } from '../lib/calendar';
 
 export const DetailsSection: React.FC = () => {
   const [copied, setCopied] = useState(false);
@@ -60,7 +61,7 @@ export const DetailsSection: React.FC = () => {
 
             {/* VISUALLY DOMINANT DATE BLOCK */}
             <div className="my-8 py-8 border-y-2 border-[#8E3F2C]/30 bg-[#F3EBDD]/60 rounded-xl relative overflow-hidden">
-              <div className="flex flex-col items-center justify-center space-y-2">
+              <div className="flex flex-col items-center justify-center space-y-3">
                 <span className="text-xs sm:text-sm font-cinzel font-bold tracking-[0.3em] text-[#8E3F2C] uppercase">
                   DATE OF CELEBRATION
                 </span>
@@ -73,6 +74,20 @@ export const DetailsSection: React.FC = () => {
                     WEDNESDAY
                   </span>
                   <div className="h-[1px] w-12 bg-[#8E3F2C]/60" />
+                </div>
+
+                {/* Direct Google Calendar Link */}
+                <div className="pt-2">
+                  <a
+                    href={getGoogleCalendarUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#8E3F2C] hover:bg-[#A84D34] text-[#FAF6EE] text-xs font-cinzel font-bold tracking-wider transition-all duration-200 shadow-md hover:scale-[1.02]"
+                    title="Add ASMITA 2026 to Google Calendar"
+                  >
+                    <CalendarPlus size={15} className="text-[#E8D7B8]" />
+                    <span>ADD TO GOOGLE CALENDAR</span>
+                  </a>
                 </div>
               </div>
             </div>

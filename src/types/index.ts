@@ -5,6 +5,7 @@ export interface RegistrationFormData {
   college: string;
   branch: string;
   year: string;
+  section: string;
   studentId: string;
   attireCategory: string;
   participationNote?: string;
@@ -13,6 +14,11 @@ export interface RegistrationFormData {
 export interface RegistrationRecord extends RegistrationFormData {
   id: string;
   registrationId: string;
+  uid?: string | null;
+  course?: string;
+  academicYear?: string;
+  attire?: string;
+  notes?: string;
   createdAt: number | string;
   status: 'confirmed' | 'pending' | 'waitlist';
 }

@@ -93,20 +93,30 @@
 
 /* Dedicated Print Styles for Entry Ticket */
 @media print {
-  body {
-    background: #FFFFFF !important;
-    color: #241711 !important;
+  @page {
+    size: A5 portrait;
+    margin: 8mm;
   }
-  header, footer, nav, .custom-cursor, #cursor-dot, #cursor-ring, button {
+  body {
+    background: #FAF6EE !important;
+    color: #241711 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  header, footer, nav, .custom-cursor, #cursor-dot, #cursor-ring, button, .ambient-audio-toggle {
     display: none !important;
   }
   #asmita-printable-pass {
     box-shadow: none !important;
-    margin: 20px auto !important;
-    max-width: 650px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 580px !important;
     page-break-inside: avoid !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    background-color: #FAF6EE !important;
+    border: 2px solid #8E3F2C !important;
   }
 }
+
 

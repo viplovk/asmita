@@ -8,7 +8,8 @@ import { CulturalArtifactCanvas } from '../three/CulturalArtifactCanvas';
 import { MagneticButton } from '../components/ui/MagneticButton';
 import { CountdownTimer } from '../components/ui/CountdownTimer';
 import { CornerFlourish, CeremonialSeal } from '../components/decorative/DecorativeIcons';
-import { Calendar, MapPin, Sparkles, ArrowDown } from 'lucide-react';
+import { Calendar, CalendarPlus, MapPin, Sparkles, ArrowDown } from 'lucide-react';
+import { getGoogleCalendarUrl } from '../lib/calendar';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -157,12 +158,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenRegister }) => {
 
             {/* Event Coordinates Badge */}
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2 text-xs sm:text-sm text-[#F3EBDD]">
-              <div className="flex items-center gap-2 bg-[#3A241B]/70 border border-[#B08A45]/30 px-3.5 py-2 rounded-lg backdrop-blur-xs">
-                <Calendar size={16} className="text-[#C08A32]" />
-                <span className="font-cinzel tracking-wider">
+              <a
+                href={getGoogleCalendarUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Add ASMITA 2026 to Google Calendar"
+                className="flex items-center gap-2 bg-[#3A241B]/70 hover:bg-[#4E2B1E] border border-[#B08A45]/30 hover:border-[#C08A32] px-3.5 py-2 rounded-lg backdrop-blur-xs transition-all duration-200 group cursor-pointer"
+              >
+                <CalendarPlus size={16} className="text-[#C08A32] group-hover:scale-110 transition-transform" />
+                <span className="font-cinzel tracking-wider group-hover:text-[#F3EBDD]">
                   SEPTEMBER 16, 2026 • WEDNESDAY
                 </span>
-              </div>
+                <span className="text-[9.5px] font-sans text-[#C08A32] bg-[#B08A45]/20 px-1.5 py-0.5 rounded border border-[#B08A45]/40 ml-1">
+                  + Google Cal
+                </span>
+              </a>
               <div className="flex items-center gap-2 bg-[#3A241B]/70 border border-[#B08A45]/30 px-3.5 py-2 rounded-lg backdrop-blur-xs">
                 <MapPin size={16} className="text-[#B65A3C]" />
                 <span className="font-cinzel tracking-wider">

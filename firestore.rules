@@ -3,12 +3,10 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Registrations collection for ASMITA 2026 Ethnic Day
     match /registrations/{document=**} {
-      // Allow attendees to register and create entries
-      allow create: if true;
-      // Allow attendees to read confirmation records
-      allow read: if true;
-      // Disallow external deletions
-      allow delete: if false;
+      // Allow attendees to register and create entries via addDoc
+      allow read, create: if true;
+      // Disallow external modifications or deletions
+      allow update, delete: if false;
     }
   }
 }

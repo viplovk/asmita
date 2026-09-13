@@ -3,11 +3,13 @@ import confetti from 'canvas-confetti';
 import { SectionHeading } from '../components/decorative/SectionHeading';
 import { PhysicalCard } from '../components/decorative/PhysicalCard';
 import { MagneticButton } from '../components/ui/MagneticButton';
+import { Ticket } from '../components/ui/Ticket';
 import { PassCard } from '../components/ui/PassCard';
 import {
   REGISTRATION_FIELDS,
   REGISTRATION_STEPS,
   FormFieldConfig,
+  getSectionOptions,
 } from '../config/registrationFields';
 import {
   submitRegistration,
@@ -33,7 +35,8 @@ export const RegistrationSection: React.FC<RegistrationSectionProps> = ({
     phone: '',
     college: 'IEC College of Engineering & Technology',
     branch: 'Computer Science & Engineering',
-    year: '2nd Year',
+    year: '1st Year',
+    section: 'Section A',
     studentId: '',
     attireCategory: 'North Indian (Kurta / Sherwani / Lehenga / Salwar)',
     participationNote: '',
@@ -53,26 +56,66 @@ export const RegistrationSection: React.FC<RegistrationSectionProps> = ({
   }, []);
 
   const handleChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === 'year') {
+        if (value === '1st Year') {
+          next.studentId = '';
+          // 1st Year only has Section A and Section B
+          if (next.section !== 'Section A' && next.section !== 'Section B') {
+            next.section = 'Section A';
+          }
+        } else {
+          // 2nd Year onwards has Section A, B, C, and D
+          if (!['Section A', 'Section B', 'Section C', 'Section D'].includes(next.section)) {
+            next.section = 'Section A';
+          }
+        }
+      }
+      return next;
+    });
+
+    if (errors[name] || (name === 'year' && value === '1st Year' && errors.studentId) || (name === 'year' && errors.section)) {
       setErrors((prev) => {
         const next = { ...prev };
         delete next[name];
+        if (name === 'year') {
+          delete next.section;
+          if (value === '1st Year') {
+            delete next.studentId;
+          }
+        }
         return next;
       });
     }
   };
 
   const validateStep = (step: 1 | 2 | 3): boolean => {
-    const stepFields = REGISTRATION_FIELDS.filter((f) => f.step === step);
+    const stepFields = REGISTRATION_FIELDS.filter((f) => {
+      if (f.step !== step) return false;
+      // Do not ask or validate roll number for 1st year students
+      if (step === 2 && f.name === 'studentId' && formData.year === '1st Year') {
+        return false;
+      }
+      return true;
+    });
+
     const newErrors: { [key: string]: string } = {};
 
     stepFields.forEach((field) => {
       const val = (formData as any)[field.name];
-      if (field.required && (!val || val.trim() === '')) {
+      // studentId is required for 2nd, 3rd, 4th years, waived for 1st Year
+      const isFieldRequired = field.name === 'studentId' ? formData.year !== '1st Year' : field.required;
+
+      if (isFieldRequired && (!val || val.trim() === '')) {
         newErrors[field.name] = field.errorMessage || `${field.label} is required`;
       } else if (val && field.validationRegex && !field.validationRegex.test(val)) {
         newErrors[field.name] = field.errorMessage || `Please enter a valid ${field.label.toLowerCase()}`;
+      } else if (field.name === 'section') {
+        const validOptions = getSectionOptions(formData.year).map((opt) => opt.value);
+        if (!validOptions.includes(val)) {
+          newErrors.section = `Please select an authorized section (${validOptions.join(' or ')})`;
+        }
       }
     });
 
@@ -96,13 +139,23 @@ export const RegistrationSection: React.FC<RegistrationSectionProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent duplicate rapid submission
     if (!validateStep(currentStep)) return;
 
     setIsSubmitting(true);
     setErrorMessage(null);
 
+    const submissionPayload: RegistrationFormData = {
+      ...formData,
+      // For 1st years who have not yet received roll numbers, assign clear pending status
+      studentId:
+        formData.year === '1st Year'
+          ? '1st Year (Pending)'
+          : formData.studentId.trim(),
+    };
+
     try {
-      const res = await submitRegistration(formData);
+      const res = await submitRegistration(submissionPayload);
       if (res.success) {
         // Trigger celebratory confetti
         confetti({
@@ -113,7 +166,7 @@ export const RegistrationSection: React.FC<RegistrationSectionProps> = ({
         });
 
         setSubmittedRecord({
-          ...formData,
+          ...submissionPayload,
           id: res.registrationId,
           registrationId: res.registrationId,
           createdAt: Date.now(),
@@ -129,7 +182,14 @@ export const RegistrationSection: React.FC<RegistrationSectionProps> = ({
     }
   };
 
-  const stepFields = REGISTRATION_FIELDS.filter((f) => f.step === currentStep);
+  // Filter out roll number for 1st-year students
+  const stepFields = REGISTRATION_FIELDS.filter((f) => {
+    if (f.step !== currentStep) return false;
+    if (currentStep === 2 && f.name === 'studentId' && formData.year === '1st Year') {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <section
@@ -185,9 +245,13 @@ export const RegistrationSection: React.FC<RegistrationSectionProps> = ({
               </p>
             </div>
 
-            <PassCard
+            <Ticket
               record={submittedRecord}
               onClose={onCloseModal}
+              onRegisterAnother={() => {
+                setSubmittedRecord(null);
+                localStorage.removeItem('asmita_2026_current_reg');
+              }}
             />
 
             <div className="text-center pt-2">
@@ -263,78 +327,117 @@ export const RegistrationSection: React.FC<RegistrationSectionProps> = ({
             {/* Form Fields */}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {stepFields.map((field) => (
-                  <div
-                    key={field.id}
-                    className={
-                      field.type === 'textarea' || field.id === 'fullName' || field.id === 'attireCategory'
-                        ? 'sm:col-span-2'
-                        : 'sm:col-span-1'
-                    }
-                  >
-                    <label
-                      htmlFor={field.id}
-                      className="block text-xs font-cinzel tracking-wider text-[#E8D7B8] mb-2 font-medium"
-                    >
-                      {field.label} {field.required && <span className="text-[#B65A3C]">*</span>}
-                    </label>
-
-                    {field.type === 'select' ? (
-                      <select
-                        id={field.id}
-                        name={field.name}
-                        value={(formData as any)[field.name]}
-                        onChange={(e) => handleChange(field.name, e.target.value)}
-                        className={`w-full px-4 py-3 rounded-lg bg-[#241711]/90 border text-sm text-[#F3EBDD] focus:outline-hidden focus:border-[#E8D7B8] transition-colors ${
-                          errors[field.name] ? 'border-red-500' : 'border-[#B08A45]/40'
-                        }`}
-                      >
-                        {field.options?.map((opt) => (
-                          <option key={opt.value} value={opt.value} className="bg-[#241711] text-[#F3EBDD]">
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : field.type === 'textarea' ? (
-                      <textarea
-                        id={field.id}
-                        name={field.name}
-                        rows={3}
-                        placeholder={field.placeholder}
-                        value={(formData as any)[field.name]}
-                        onChange={(e) => handleChange(field.name, e.target.value)}
-                        className={`w-full px-4 py-3 rounded-lg bg-[#241711]/90 border text-sm text-[#F3EBDD] placeholder-[#D8C19A]/40 focus:outline-hidden focus:border-[#E8D7B8] transition-colors resize-none ${
-                          errors[field.name] ? 'border-red-500' : 'border-[#B08A45]/40'
-                        }`}
-                      />
-                    ) : (
-                      <input
-                        id={field.id}
-                        name={field.name}
-                        type={field.type}
-                        placeholder={field.placeholder}
-                        value={(formData as any)[field.name]}
-                        onChange={(e) => handleChange(field.name, e.target.value)}
-                        className={`w-full px-4 py-3 rounded-lg bg-[#241711]/90 border text-sm text-[#F3EBDD] placeholder-[#D8C19A]/40 focus:outline-hidden focus:border-[#E8D7B8] transition-colors ${
-                          errors[field.name] ? 'border-red-500' : 'border-[#B08A45]/40'
-                        }`}
-                      />
-                    )}
-
-                    {field.helperText && !errors[field.name] && (
-                      <p className="mt-1 text-[11px] text-[#D8C19A]/60 font-sans">
-                        {field.helperText}
-                      </p>
-                    )}
-
-                    {errors[field.name] && (
-                      <p className="mt-1 text-xs text-red-400 font-sans">
-                        {errors[field.name]}
-                      </p>
-                    )}
+                {currentStep === 2 && formData.year === '1st Year' && (
+                  <div className="sm:col-span-2 p-3.5 rounded-lg bg-[#3A241B]/80 border border-[#B08A45]/50 text-xs text-[#E8D7B8] flex items-start gap-3 shadow-inner">
+                    <span className="text-[#C08A32] text-sm font-bold">✦</span>
+                    <div>
+                      <span className="font-cinzel font-bold text-[#E8D7B8] block tracking-wider uppercase">
+                        1st Year Students Notice
+                      </span>
+                      <span className="text-[#D8C19A]/90 text-[11px] leading-relaxed block mt-0.5 font-sans">
+                        University roll numbers are not yet issued to 1st-year students, so roll number entry is waived. 1st Year is divided into Section A and Section B. Your ceremonial pass will be verified using your Name, Branch, and Section.
+                      </span>
+                    </div>
                   </div>
-                ))}
+                )}
+
+                {stepFields.map((field) => {
+                  const fieldOptions = field.name === 'section' ? getSectionOptions(formData.year) : field.options;
+                  const fieldHelper =
+                    field.name === 'section'
+                      ? formData.year === '1st Year'
+                        ? '1st Year sections: Section A & Section B'
+                        : '2nd Year onwards sections: Section A, B, C & D'
+                      : field.helperText;
+
+                  return (
+                    <div
+                      key={field.id}
+                      className={
+                        field.type === 'textarea' || field.id === 'fullName' || field.id === 'attireCategory'
+                          ? 'sm:col-span-2'
+                          : 'sm:col-span-1'
+                      }
+                    >
+                      <label
+                        htmlFor={field.id}
+                        className="block text-xs font-cinzel tracking-wider text-[#E8D7B8] mb-2 font-medium"
+                      >
+                        {field.label} {field.required && <span className="text-[#B65A3C]">*</span>}
+                      </label>
+
+                      {field.type === 'select' ? (
+                        <select
+                          id={field.id}
+                          name={field.name}
+                          value={(formData as any)[field.name]}
+                          onChange={(e) => handleChange(field.name, e.target.value)}
+                          className={`w-full px-4 py-3 rounded-lg bg-[#241711]/90 border text-sm text-[#F3EBDD] focus:outline-hidden focus:border-[#E8D7B8] transition-colors ${
+                            errors[field.name] ? 'border-red-500' : 'border-[#B08A45]/40'
+                          }`}
+                        >
+                          {fieldOptions?.map((opt) => (
+                            <option key={opt.value} value={opt.value} className="bg-[#241711] text-[#F3EBDD]">
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : field.type === 'textarea' ? (
+                        <textarea
+                          id={field.id}
+                          name={field.name}
+                          rows={3}
+                          placeholder={field.placeholder}
+                          value={(formData as any)[field.name]}
+                          onChange={(e) => handleChange(field.name, e.target.value)}
+                          className={`w-full px-4 py-3 rounded-lg bg-[#241711]/90 border text-sm text-[#F3EBDD] placeholder-[#D8C19A]/40 focus:outline-hidden focus:border-[#E8D7B8] transition-colors resize-none ${
+                            errors[field.name] ? 'border-red-500' : 'border-[#B08A45]/40'
+                          }`}
+                        />
+                      ) : (
+                        <input
+                          id={field.id}
+                          name={field.name}
+                          type={field.type}
+                          placeholder={field.placeholder}
+                          value={(formData as any)[field.name]}
+                          onChange={(e) => handleChange(field.name, e.target.value)}
+                          className={`w-full px-4 py-3 rounded-lg bg-[#241711]/90 border text-sm text-[#F3EBDD] placeholder-[#D8C19A]/40 focus:outline-hidden focus:border-[#E8D7B8] transition-colors ${
+                            errors[field.name] ? 'border-red-500' : 'border-[#B08A45]/40'
+                          }`}
+                        />
+                      )}
+
+                      {fieldHelper && !errors[field.name] && (
+                        <p className="mt-1 text-[11px] text-[#D8C19A]/60 font-sans">
+                          {fieldHelper}
+                        </p>
+                      )}
+
+                      {errors[field.name] && (
+                        <p className="mt-1 text-xs text-red-400 font-sans">
+                          {errors[field.name]}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+
+              {/* Submission Error Banner */}
+              {errorMessage && (
+                <div className="p-4 rounded-lg border border-red-500/40 bg-red-950/70 text-xs text-red-200 flex items-start gap-3 shadow-lg">
+                  <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-semibold text-red-300 font-cinzel tracking-wider">
+                      REGISTRATION COULD NOT BE SAVED
+                    </p>
+                    <p className="text-red-200/90 leading-relaxed font-sans text-xs">
+                      {errorMessage}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Navigation Controls */}
               <div className="pt-6 border-t border-[#B08A45]/30 flex items-center justify-between gap-4">
