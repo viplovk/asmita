@@ -35,45 +35,7 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
     const registrationsRef = collection(db, 'registrations');
     const emailClean = data.email.toLowerCase().trim();
 
-    // 1. Check for duplicate registration by email in Firestore (if read permission exists)
-    try {
-      const emailQuery = query(registrationsRef, where('email', '==', emailClean));
-      const emailSnap = await getDocs(emailQuery);
-
-      if (!emailSnap.empty) {
-        const existingDoc = emailSnap.docs[0];
-        const existingData = existingDoc.data();
-        const existingRegId = existingData.registrationId || existingDoc.id;
-
-        const existingRecord: RegistrationRecord = {
-          ...data,
-          id: existingRegId,
-          registrationId: existingRegId,
-          course: existingData.course || data.branch,
-          academicYear: existingData.academicYear || data.year,
-          attire: existingData.attire || data.attireCategory,
-          notes: existingData.notes || data.participationNote || '',
-          createdAt: existingData.createdAtMillis || timestamp,
-          status: 'confirmed',
-        };
-
-        try {
-          localStorage.setItem(CURRENT_USER_REG_KEY, JSON.stringify(existingRecord));
-        } catch {
-          // ignore
-        }
-
-        return {
-          success: true,
-          registrationId: existingRegId,
-          isFirebaseLive: true,
-        };
-      }
-    } catch {
-      // If reading/querying is restricted by Firestore rules, proceed directly to document creation
-    }
-
-    // 2. Document payload matching exact requested schema:
+    // Document payload matching requested schema:
     // registrationId, fullName, email, phone, college, course, academicYear, section, attire, notes, status, createdAt
     const firestoreDocument = {
       registrationId: regId,
@@ -99,11 +61,11 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
       source: 'asmita_web_portal',
     };
 
-    // 3. Real Cloud Firestore write using addDoc() and collection(db, 'registrations')
+    // Direct Cloud Firestore write using addDoc() and collection(db, 'registrations')
     const docRef = await addDoc(registrationsRef, firestoreDocument);
     console.info(`✦ [Firestore Write Success] Document added to 'registrations' (Doc ID: ${docRef.id}, Reg ID: ${regId})`);
 
-    // 4. Success confirmed by Firestore: Cache record for ticket view / reload
+    // Success confirmed by Firestore: Cache record for ticket view / reload
     const confirmedRecord: RegistrationRecord = {
       ...data,
       id: regId,
@@ -133,20 +95,26 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
       isFirebaseLive: true,
     };
   } catch (firebaseErr: any) {
-    console.warn('✦ [Firestore Write Error]:', firebaseErr?.message || firebaseErr);
+    console.error('✦ [Firestore Write Error]:', firebaseErr);
+    const code = firebaseErr?.code ? `[${firebaseErr.code}] ` : '';
+    const message =
+      firebaseErr?.message ||
+      (firebaseErr instanceof Error ? firebaseErr.message : String(firebaseErr));
+
     const isPermission =
       firebaseErr?.code === 'permission-denied' ||
-      String(firebaseErr?.message || '').toLowerCase().includes('permission');
-    const helpfulMsg = isPermission
-      ? 'Firestore security rules restricted this write (Missing or insufficient permissions). In Firebase Console → Firestore Database → Rules, set: match /registrations/{document=**} { allow read, create: if true; }'
-      : (firebaseErr instanceof Error ? firebaseErr.message : 'Failed to write registration to Cloud Firestore.');
+      String(message).toLowerCase().includes('permission');
+
+    const detailedError = isPermission
+      ? `[permission-denied] Firestore security rules restricted this write. In Firebase Console (asmita-01) → Firestore Database → Rules, ensure: match /registrations/{document=**} { allow read, create: if true; }`
+      : `${code}${message}`;
 
     // CRITICAL: Return success: false so the success screen does NOT show on error!
     return {
       success: false,
       registrationId: '',
       isFirebaseLive: false,
-      error: helpfulMsg,
+      error: detailedError,
     };
   }
 }
