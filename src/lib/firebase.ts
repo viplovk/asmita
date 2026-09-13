@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getAuth, Auth } from 'firebase/auth';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 // Environment variables configuration for Firebase
 const firebaseConfig = {
@@ -12,38 +12,19 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Validate whether all necessary keys are present
+// Initialize Firebase exactly once to prevent duplicate app initialization
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
+// Initialize Cloud Firestore and export instance
+const db = getFirestore(app);
+
+// Initialize Auth
+const auth = getAuth(app);
+
 export const isFirebaseConfigured = Boolean(
-  firebaseConfig.apiKey &&
-  firebaseConfig.projectId &&
-  firebaseConfig.apiKey !== 'YOUR_API_KEY' &&
-  !firebaseConfig.apiKey.startsWith('MY_')
+  firebaseConfig.apiKey && firebaseConfig.projectId
 );
 
 export const firebaseProjectId = firebaseConfig.projectId || null;
 
-let app: FirebaseApp | null = null;
-let db: Firestore | null = null;
-let auth: Auth | null = null;
-
-if (isFirebaseConfigured) {
-  try {
-    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    db = getFirestore(app);
-    auth = getAuth(app);
-    console.info('✦ [Firebase Cloud Firestore] Active & connected to project:', firebaseConfig.projectId);
-  } catch (error) {
-    console.warn('✦ [Firebase Cloud Firestore] Initialization error:', error);
-    db = null;
-    auth = null;
-  }
-} else {
-  if (import.meta.env.DEV) {
-    console.info(
-      '✦ [Firebase Notice] Awaiting Firebase credentials. Configure VITE_FIREBASE_* in your environment to link your Firestore database at console.firebase.google.com'
-    );
-  }
-}
-
 export { app, db, auth };
-

@@ -53,7 +53,7 @@ export const ExperienceSection: React.FC = () => {
     <section
       ref={sectionRef}
       id="experience"
-      className="relative w-full py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#241711] via-[#2A1812] to-[#241711] overflow-hidden"
+      className="relative w-full py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#241711] via-[#2A1812] to-[#241711] overflow-hidden"
     >
       <div className="max-w-7xl mx-auto relative z-10">
         <SectionHeading

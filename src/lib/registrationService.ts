@@ -6,8 +6,7 @@ import {
   where,
   serverTimestamp,
 } from 'firebase/firestore';
-import { signInAnonymously } from 'firebase/auth';
-import { db, auth, isFirebaseConfigured } from './firebase';
+import { db, isFirebaseConfigured } from './firebase';
 import { RegistrationFormData, RegistrationRecord } from '../types';
 
 const LOCAL_STORAGE_KEY = 'asmita_2026_registrations';
@@ -32,33 +31,11 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
   const regId = generateRegistrationId();
   const timestamp = Date.now();
 
-  // Verify Firestore configuration and instance
-  if (!isFirebaseConfigured || !db) {
-    return {
-      success: false,
-      registrationId: '',
-      isFirebaseLive: false,
-      error: 'Cloud Firestore is not initialized or credentials are missing. Please check your Firebase project configuration.',
-    };
-  }
-
   try {
-    // 1. Resolve Firebase Auth UID (reuses existing auth session or signs in anonymously if enabled)
-    let uid: string | null = auth?.currentUser?.uid || null;
-    if (!uid && auth) {
-      try {
-        const cred = await signInAnonymously(auth);
-        uid = cred.user.uid;
-      } catch (authErr) {
-        // If anonymous authentication is not enabled in Firebase Console, proceed with null UID
-        console.warn('Anonymous authentication not active or optional:', authErr);
-      }
-    }
-
     const registrationsRef = collection(db, 'registrations');
     const emailClean = data.email.toLowerCase().trim();
 
-    // 2. Check for duplicate registration by email in Firestore
+    // 1. Check for duplicate registration by email in Firestore (if read permission exists)
     try {
       const emailQuery = query(registrationsRef, where('email', '==', emailClean));
       const emailSnap = await getDocs(emailQuery);
@@ -72,7 +49,6 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
           ...data,
           id: existingRegId,
           registrationId: existingRegId,
-          uid: existingData.uid || uid,
           course: existingData.course || data.branch,
           academicYear: existingData.academicYear || data.year,
           attire: existingData.attire || data.attireCategory,
@@ -83,8 +59,8 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
 
         try {
           localStorage.setItem(CURRENT_USER_REG_KEY, JSON.stringify(existingRecord));
-        } catch (e) {
-          console.warn('Local storage write warning:', e);
+        } catch {
+          // ignore
         }
 
         return {
@@ -93,15 +69,14 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
           isFirebaseLive: true,
         };
       }
-    } catch (readErr) {
-      // Query read failed or rules do not allow listing; proceed directly to addDoc
-      console.warn('Firestore duplicate lookup skipped or disallowed by security rules:', readErr);
+    } catch {
+      // If reading/querying is restricted by Firestore rules, proceed directly to document creation
     }
 
-    // 3. Document payload matching the exact requested Firestore schema
+    // 2. Document payload matching exact requested schema:
+    // registrationId, fullName, email, phone, college, course, academicYear, section, attire, notes, status, createdAt
     const firestoreDocument = {
       registrationId: regId,
-      uid: uid || null,
       fullName: data.fullName.trim(),
       email: emailClean,
       phone: data.phone.trim(),
@@ -113,7 +88,7 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
       notes: data.participationNote?.trim() || '',
       status: 'confirmed',
       createdAt: serverTimestamp(),
-      // Companion alias fields to support internal UI backwards-compatibility
+      // Companion alias fields to support internal pass UI & backwards-compatibility
       branch: data.branch,
       year: data.year,
       studentId: (data.studentId || '').trim(),
@@ -124,16 +99,15 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
       source: 'asmita_web_portal',
     };
 
-    // 4. Perform the REAL Cloud Firestore write using addDoc() and collection()
+    // 3. Real Cloud Firestore write using addDoc() and collection(db, 'registrations')
     const docRef = await addDoc(registrationsRef, firestoreDocument);
-    console.info(`✦ [Firestore] Document successfully written to 'registrations' collection (Doc ID: ${docRef.id}, Registration ID: ${regId})`);
+    console.info(`✦ [Firestore Write Success] Document added to 'registrations' (Doc ID: ${docRef.id}, Reg ID: ${regId})`);
 
-    // 5. Success confirmed by Firestore: Cache record locally for ticket presentation
+    // 4. Success confirmed by Firestore: Cache record for ticket view / reload
     const confirmedRecord: RegistrationRecord = {
       ...data,
       id: regId,
       registrationId: regId,
-      uid: uid || null,
       course: data.branch,
       academicYear: data.year,
       attire: data.attireCategory,
@@ -150,7 +124,7 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(existingList));
       localStorage.setItem(CURRENT_USER_REG_KEY, JSON.stringify(confirmedRecord));
     } catch (lsErr) {
-      console.warn('Local storage cache warning:', lsErr);
+      console.warn('Local storage cache notice:', lsErr);
     }
 
     return {
@@ -159,7 +133,7 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
       isFirebaseLive: true,
     };
   } catch (firebaseErr: any) {
-    console.warn('✦ [Firestore Write Notice]:', firebaseErr?.message || firebaseErr);
+    console.warn('✦ [Firestore Write Error]:', firebaseErr?.message || firebaseErr);
     const isPermission =
       firebaseErr?.code === 'permission-denied' ||
       String(firebaseErr?.message || '').toLowerCase().includes('permission');

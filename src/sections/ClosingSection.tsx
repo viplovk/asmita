@@ -16,7 +16,7 @@ export const ClosingSection: React.FC<ClosingSectionProps> = ({ onOpenRegister }
   };
 
   return (
-    <footer className="relative w-full pt-28 pb-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#241711] via-[#1D120D] to-[#140B07] text-[#F3EBDD] overflow-hidden">
+    <footer className="relative w-full pt-12 sm:pt-16 pb-10 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#241711] via-[#1D120D] to-[#140B07] text-[#F3EBDD] overflow-hidden">
       
       {/* Background Mandala Watermark */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-10">

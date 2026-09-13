@@ -195,7 +195,7 @@ export const RegistrationSection: React.FC<RegistrationSectionProps> = ({
     <section
       id="register"
       className={`relative w-full ${
-        isModal ? 'py-4' : 'py-24 sm:py-32'
+        isModal ? 'py-4' : 'py-10 sm:py-14'
       } px-4 sm:px-6 lg:px-8 bg-[#241711] text-[#F3EBDD] overflow-hidden`}
     >
       <div className="max-w-4xl mx-auto relative z-10">

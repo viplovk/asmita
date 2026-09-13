@@ -19,7 +19,7 @@ export const DetailsSection: React.FC = () => {
   return (
     <section
       id="venue"
-      className="relative w-full pt-6 sm:pt-10 pb-24 sm:pb-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#241711] via-[#331E17] to-[#241711] text-[#F3EBDD] overflow-hidden"
+      className="relative w-full pt-2 sm:pt-4 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#241711] via-[#331E17] to-[#241711] text-[#F3EBDD] overflow-hidden"
     >
       <div className="max-w-6xl mx-auto relative z-10">
         <SectionHeading
@@ -28,6 +28,7 @@ export const DetailsSection: React.FC = () => {
           title="THE OFFICIAL INVITATION"
           subtitle="You are cordially invited to celebrate culture and heritage at IEC College of Engineering & Technology."
           align="center"
+          className="!mb-4 sm:!mb-5"
         />
 
         {/* Physical Royal Invitation Card */}

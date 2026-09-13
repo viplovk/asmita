@@ -26,7 +26,7 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
   }[align];
 
   return (
-    <div className={`flex flex-col ${alignmentClass} mb-12 sm:mb-16 ${className}`}>
+    <div className={`flex flex-col ${alignmentClass} mb-6 sm:mb-8 ${className}`}>
       {/* Top category / ceremonial badge */}
       <div className="inline-flex items-center gap-2 mb-3">
         {number && (

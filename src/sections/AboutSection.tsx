@@ -47,7 +47,7 @@ export const AboutSection: React.FC = () => {
     <section
       ref={sectionRef}
       id="about"
-      className="relative w-full py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-[#241711] text-[#F3EBDD] overflow-hidden"
+      className="relative w-full py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-[#241711] text-[#F3EBDD] overflow-hidden"
     >
       {/* Subtle background ambient terracotta warmth */}
       <div className="absolute top-1/3 -left-32 w-96 h-96 rounded-full bg-[#B65A3C]/10 blur-[100px] pointer-events-none" />

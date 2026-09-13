@@ -9,7 +9,7 @@ export const ContactSection: React.FC = () => {
   return (
     <section
       id="contact"
-      className="relative w-full py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-[#241711] text-[#F3EBDD] overflow-hidden"
+      className="relative w-full py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-[#241711] text-[#F3EBDD] overflow-hidden"
     >
       <div className="max-w-6xl mx-auto relative z-10">
         <SectionHeading
