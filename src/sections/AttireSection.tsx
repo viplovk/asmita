@@ -50,7 +50,7 @@ export const AttireSection: React.FC = () => {
     <section
       ref={sectionRef}
       id="attire"
-      className="relative w-full py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-[#241711] text-[#F3EBDD] overflow-hidden"
+      className="relative w-full pt-20 sm:pt-28 pb-4 sm:pb-6 px-4 sm:px-6 lg:px-8 bg-[#241711] text-[#F3EBDD] overflow-hidden"
     >
       {/* Background textile weave grid */}
       <div className="max-w-7xl mx-auto relative z-10">
@@ -146,7 +146,7 @@ export const AttireSection: React.FC = () => {
           ))}
         </div>
 
-        <BrassDivider variant="simple" accentText="CRAFT • WEAVE • HERITAGE" />
+        <BrassDivider variant="simple" accentText="CRAFT • WEAVE • HERITAGE" className="!my-4" />
       </div>
     </section>
   );
