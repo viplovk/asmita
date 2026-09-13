@@ -316,14 +316,6 @@ export const RegistrationSection: React.FC<RegistrationSectionProps> = ({
               </div>
             </div>
 
-            {/* Error banner */}
-            {errorMessage && (
-              <div className="mb-6 p-4 rounded-lg bg-red-950/60 border border-red-800 text-red-200 text-xs flex items-center gap-3">
-                <AlertCircle size={16} className="text-red-400 shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
             {/* Form Fields */}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
