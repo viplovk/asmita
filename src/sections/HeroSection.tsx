@@ -134,7 +134,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenRegister }) => {
             {titleLetters.map((letter, i) => (
               <span
                 key={i}
-                ref={(el) => (letterRefs.current[i] = el)}
+                ref={(el) => {
+                  letterRefs.current[i] = el;
+                }}
                 className="inline-block text-6xl sm:text-8xl md:text-9xl lg:text-[7.5rem] font-serif-display font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#F3EBDD] via-[#E8D7B8] to-[#B08A45] drop-shadow-[0_10px_25px_rgba(0,0,0,0.8)] select-none"
               >
                 {letter}
