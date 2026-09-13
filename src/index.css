@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-serif: 'Cormorant Garamond', Georgia, serif;
+    --font-heading: 'Cinzel', 'Marcellus', Georgia, serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --color-terracotta: #B65A3C;
+    --color-terracotta-burnt: #8E3F2C;
+    --color-ochre: #C08A32;
+    --color-earth-deep: #3A241B;
+    --color-coffee-dark: #241711;
+    --color-beige-warm: #E8D7B8;
+    --color-parchment: #D8C19A;
+    --color-cream-muted: #F3EBDD;
+    --color-brass-aged: #B08A45;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #241711;
+    color: #F3EBDD;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-serif-display {
+    font-family: var(--font-serif);
+  }
+
+  .font-cinzel {
+    font-family: var(--font-heading);
+  }
+
+  .font-marcellus {
+    font-family: 'Marcellus', serif;
+  }
+}
+
+/* Subtle physical paper grain texture overlay using SVG noise */
+.paper-grain-texture {
+  background-image: radial-gradient(rgba(243, 235, 221, 0.03) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.terracotta-texture {
+  background-image: 
+    radial-gradient(ellipse at 50% 0%, rgba(182, 90, 60, 0.15) 0%, transparent 65%),
+    radial-gradient(circle at 100% 100%, rgba(192, 138, 50, 0.08) 0%, transparent 50%);
+}
+
+.brass-sheen {
+  background: linear-gradient(135deg, rgba(176, 138, 69, 0.3) 0%, rgba(216, 193, 154, 0.6) 50%, rgba(142, 63, 44, 0.2) 100%);
+}
+
+.brass-border-subtle {
+  border-color: rgba(176, 138, 69, 0.35);
+}
+
+.brass-border-glow:hover {
+  border-color: rgba(216, 193, 154, 0.7);
+  box-shadow: 0 0 25px -5px rgba(176, 138, 69, 0.25);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #241711;
+}
+::-webkit-scrollbar-thumb {
+  background: #8E3F2C;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B08A45;
+}
+
+/* Custom cursor hide default only on non-touch */
+@media (hover: hover) and (pointer: fine) {
+  body.has-custom-cursor {
+    cursor: none;
+  }
+  body.has-custom-cursor a,
+  body.has-custom-cursor button,
+  body.has-custom-cursor input,
+  body.has-custom-cursor select,
+  body.has-custom-cursor textarea,
+  body.has-custom-cursor [role="button"] {
+    cursor: none;
+  }
+}
+
+/* Dedicated Print Styles for Entry Ticket */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #241711 !important;
+  }
+  header, footer, nav, .custom-cursor, #cursor-dot, #cursor-ring, button {
+    display: none !important;
+  }
+  #asmita-printable-pass {
+    box-shadow: none !important;
+    margin: 20px auto !important;
+    max-width: 650px !important;
+    page-break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+

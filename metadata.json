@@ -1,0 +1,6 @@
+{
+  "name": "ASMITA — Ethnic Day",
+  "description": "A celebration of culture, tradition, identity & expression at IEC College of Engineering & Technology, Greater Noida.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
