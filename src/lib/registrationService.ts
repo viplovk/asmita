@@ -6,7 +6,7 @@ import {
   where,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from './firebase';
+import { db, isFirebaseConfigured, firebaseConfigurationError } from './firebase';
 import { RegistrationFormData, RegistrationRecord } from '../types';
 
 const LOCAL_STORAGE_KEY = 'asmita_2026_registrations';
@@ -28,6 +28,20 @@ export async function submitRegistration(data: RegistrationFormData): Promise<{
   isFirebaseLive: boolean;
   error?: string;
 }> {
+  // If Firebase configuration is unavailable, fail gracefully without breaking the UI
+  if (!isFirebaseConfigured || !db) {
+    console.warn(
+      '✦ [Registration Service] Firebase is not configured:',
+      firebaseConfigurationError
+    );
+    return {
+      success: false,
+      registrationId: '',
+      isFirebaseLive: false,
+      error: 'Registration service is temporarily unavailable. Please try again.',
+    };
+  }
+
   const regId = generateRegistrationId();
   const timestamp = Date.now();
 
